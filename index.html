@@ -55,8 +55,8 @@
             const m15 = addMin(draw, 15);
             const m10 = addMin(draw, 20);
             const m5  = addMin(draw, 25);
-            const release = addMin(draw, 30);
-            const speak = addMin(release, releaseInterval);
+            const release = addMin(speak, i-releaseInterval);
+            const speak = addMin(draw, 30);
             next.push({ id: `${i}`, speaker: `${i+1}`, draw, m15, m10, m5, release, speak, call: addMin(draw, -callInterval) });
           }
           setRows(next);
