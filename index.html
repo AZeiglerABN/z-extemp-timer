@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Z Extemp Timer</title>
     <meta name="theme-color" content="#111827" />
-    <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React 18 + ReactDOM (UMD) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel so we can use JSX in the browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       html, body { overflow-x: hidden; }
+      body {
+        background-color: #f9fafb; /* soft gray backdrop */
+      }
     </style>
   </head>
   <body class="bg-gray-50">
@@ -29,9 +29,10 @@
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
       }
+
       function ZExtempTimer(){
         const [drawInterval, setDrawInterval] = useState(9);
-        const [releaseInterval, setReleaseInterval] = useState(0); // default now 0
+        const [releaseInterval, setReleaseInterval] = useState(0); // default 0
         const [callInterval, setCallInterval] = useState(1);
         const [speakerCount, setSpeakerCount] = useState(6);
         const [roundBeginsAt, setRoundBeginsAt] = useState('');
@@ -58,11 +59,8 @@
             const m15 = addMin(draw, 15);
             const m10 = addMin(draw, 20);
             const m5  = addMin(draw, 25);
-
-            // CHANGED: Speak fixed at Draw + 30; Release derived from Speak - releaseInterval
             const speak = addMin(draw, 30);
             const release = addMin(speak, -releaseInterval);
-
             next.push({
               id: `${i}`,
               speaker: `${i+1}`,
@@ -92,14 +90,8 @@
           const diffMin = Math.abs((targetTime - now) / 60000);
           return diffMin <= callInterval;
         };
-        const isActiveOneMinute = (targetTime) => {
-          if(!targetTime) return false;
-          return now >= targetTime && now < addMin(targetTime, 1);
-        };
-        const isRedOneMinute = (targetTime) => {
-          if(!targetTime) return false;
-          return now >= addMin(targetTime, 1) && now < addMin(targetTime, 2);
-        };
+        const isActiveOneMinute = (targetTime) => now >= targetTime && now < addMin(targetTime, 1);
+        const isRedOneMinute = (targetTime) => now >= addMin(targetTime, 1) && now < addMin(targetTime, 2);
         const isBlackAfterRed = (targetTime) => {
           if(!targetTime) return false;
           if(lastRedOffTime && now >= lastRedOffTime) return false;
@@ -143,75 +135,13 @@
                     onChange={(e)=>setRoundBeginsAt(e.target.value)} />
                 </Labeled>
               </div>
-              <div className="bg-white rounded-2xl shadow">
-                <table className="w-full text-xl md:text-2xl lg:text-3xl xl:text-4xl table-fixed">
+
+              <!-- Watermark background -->
+              <div className="relative bg-white rounded-2xl shadow overflow-hidden">
+                <img src="logo.png" className="absolute inset-0 w-full h-full object-contain opacity-10 pointer-events-none" />
+                <table className="relative w-full text-xl md:text-2xl lg:text-3xl xl:text-4xl table-fixed">
                   <thead className="bg-gray-100 text-gray-700 text-sm md:text-base lg:text-lg">
                     <tr>
                       <Th>Speaker</Th>
                       <Th>Draw</Th>
                       <Th>15 min</Th>
-                      <Th>10 min</Th>
-                      <Th>5 min</Th>
-                      <Th>Release</Th>
-                      <Th>Speak</Th>
-                      <Th>Status</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r)=> (
-                      <tr key={r.id} className="border-t text-center">
-                        <Td highlight={isWithinCallInterval(r.draw)} active={isActiveOneMinute(r.draw)} red={isRedOneMinute(r.draw)} black={isBlackAfterRed(r.draw)}>{r.speaker}</Td>
-                        <Td highlight={isWithinCallInterval(r.draw)} active={isActiveOneMinute(r.draw)} red={isRedOneMinute(r.draw)} black={isBlackAfterRed(r.draw)}>{fmtTime(r.draw)}</Td>
-                        <Td highlight={isWithinCallInterval(r.m15)} active={isActiveOneMinute(r.m15)} red={isRedOneMinute(r.m15)} black={isBlackAfterRed(r.m15)}>{fmtTime(r.m15)}</Td>
-                        <Td highlight={isWithinCallInterval(r.m10)} active={isActiveOneMinute(r.m10)} red={isRedOneMinute(r.m10)} black={isBlackAfterRed(r.m10)}>{fmtTime(r.m10)}</Td>
-                        <Td highlight={isWithinCallInterval(r.m5)} active={isActiveOneMinute(r.m5)} red={isRedOneMinute(r.m5)} black={isBlackAfterRed(r.m5)}>{fmtTime(r.m5)}</Td>
-                        <Td highlight={isWithinCallInterval(r.release)} active={isActiveOneMinute(r.release)} red={isRedOneMinute(r.release)} black={isBlackAfterRed(r.release)} className="font-medium">{fmtTime(r.release)}</Td>
-                        <Td highlight={isWithinCallInterval(r.speak)} active={isActiveOneMinute(r.speak)} red={isRedOneMinute(r.speak)} black={isBlackAfterRed(r.speak)}>{fmtTime(r.speak)}</Td>
-                        <Td><StatusPill text={statusFor(r)} /></Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      function Labeled({label, children}){
-        return (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-600">{label}</span>
-            {children}
-          </label>
-        );
-      }
-      function Th({ children }) {
-        return <th className="text-left font-semibold tracking-wide px-2 py-1 whitespace-nowrap">{children}</th>;
-      }
-      function Td({ children, highlight, active, red, black }) {
-        let bg = '';
-        if (active) bg = 'bg-green-200';
-        else if (red) bg = 'bg-red-200';
-        else if (black) bg = 'bg-black text-white';
-        else if (highlight) bg = 'bg-yellow-200';
-        return <td className={`px-2 py-1 align-middle whitespace-nowrap overflow-hidden text-ellipsis ${bg}`}>{children}</td>;
-      }
-      function StatusPill({ text }) {
-        const color =
-          text.startsWith('Prep') ? 'bg-yellow-100 text-yellow-800' :
-          text === 'Released' ? 'bg-blue-100 text-blue-800' :
-          text === 'Speaking' ? 'bg-purple-100 text-purple-800' :
-          text === 'Done' ? 'bg-green-100 text-green-800' :
-          text === 'Waiting to draw' ? 'bg-gray-100 text-gray-700' :
-          'bg-gray-100 text-gray-700';
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{text}</span>
-        );
-      }
-
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<ZExtempTimer />);
-    </script>
-  </body>
-</html>
