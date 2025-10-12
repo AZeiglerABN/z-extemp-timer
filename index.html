@@ -12,38 +12,31 @@
 
     <style>
       html, body {
-        overflow-x: hidden;
         height: 100%;
         margin: 0;
         padding: 0;
+        overflow-x: hidden;
+        background: #f9fafb; /* fallback color */
       }
 
-      body {
-        /* ✅ Full-page logo background */
-        background: url("logo.png") no-repeat center center fixed;
-        background-size: contain; /* show entire logo */
-        background-color: #f9fafb; /* soft fallback */
-        position: relative;
-      }
-
-      /* Optional semi-transparent overlay for readability */
-      body::before {
-        content: "";
+      /* ✅ Full-page background layer */
+      .page-bg {
         position: fixed;
         inset: 0;
-        background-color: rgba(255,255,255,0.85);
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      #root {
-        position: relative;
-        z-index: 1; /* ensure app content sits above overlay */
+        background: url("logo.png") no-repeat center center;
+        background-size: contain; /* shows entire logo */
+        opacity: 0.12;            /* adjust visibility */
+        pointer-events: none;     /* allows clicks through */
+        z-index: -1;              /* keeps it behind everything */
       }
     </style>
   </head>
 
   <body>
+    <!-- Background layer -->
+    <div class="page-bg"></div>
+
+    <!-- React app root -->
     <div id="root"></div>
 
     <script type="text/babel">
@@ -189,4 +182,52 @@
                         <Td highlight={isWithinCallInterval(r.m10)} active={isActiveOneMinute(r.m10)} red={isRedOneMinute(r.m10)} black={isBlackAfterRed(r.m10)}>{fmtTime(r.m10)}</Td>
                         <Td highlight={isWithinCallInterval(r.m5)} active={isActiveOneMinute(r.m5)} red={isRedOneMinute(r.m5)} black={isBlackAfterRed(r.m5)}>{fmtTime(r.m5)}</Td>
                         <Td highlight={isWithinCallInterval(r.release)} active={isActiveOneMinute(r.release)} red={isRedOneMinute(r.release)} black={isBlackAfterRed(r.release)} className="font-medium">{fmtTime(r.release)}</Td>
-                        <Td highlight={isWithinCallInterval(r.speak)} active={isAct
+                        <Td highlight={isWithinCallInterval(r.speak)} active={isActiveOneMinute(r.speak)} red={isRedOneMinute(r.speak)} black={isBlackAfterRed(r.speak)}>{fmtTime(r.speak)}</Td>
+                        <Td><StatusPill text={statusFor(r)} /></Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function Labeled({label, children}){
+        return (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-gray-600">{label}</span>
+            {children}
+          </label>
+        );
+      }
+      function Th({ children }) {
+        return <th className="text-left font-semibold tracking-wide px-2 py-1 whitespace-nowrap">{children}</th>;
+      }
+      function Td({ children, highlight, active, red, black }) {
+        let bg = '';
+        if (active) bg = 'bg-green-200';
+        else if (red) bg = 'bg-red-200';
+        else if (black) bg = 'bg-black text-white';
+        else if (highlight) bg = 'bg-yellow-200';
+        return <td className={`px-2 py-1 align-middle whitespace-nowrap overflow-hidden text-ellipsis ${bg}`}>{children}</td>;
+      }
+      function StatusPill({ text }) {
+        const color =
+          text.startsWith('Prep') ? 'bg-yellow-100 text-yellow-800' :
+          text === 'Released' ? 'bg-blue-100 text-blue-800' :
+          text === 'Speaking' ? 'bg-purple-100 text-purple-800' :
+          text === 'Done' ? 'bg-green-100 text-green-800' :
+          text === 'Waiting to draw' ? 'bg-gray-100 text-gray-700' :
+          'bg-gray-100 text-gray-700';
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{text}</span>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<ZExtempTimer />);
+    </script>
+  </body>
+</html>
