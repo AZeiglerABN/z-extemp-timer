@@ -9,15 +9,43 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-      html, body { overflow-x: hidden; }
+      html, body {
+        overflow-x: hidden;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
       body {
-        background-color: #f9fafb; /* soft gray backdrop */
+        /* ✅ Full-page logo background */
+        background: url("logo.png") no-repeat center center fixed;
+        background-size: contain; /* show entire logo */
+        background-color: #f9fafb; /* soft fallback */
+        position: relative;
+      }
+
+      /* Optional semi-transparent overlay for readability */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-color: rgba(255,255,255,0.85);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      #root {
+        position: relative;
+        z-index: 1; /* ensure app content sits above overlay */
       }
     </style>
   </head>
-  <body class="bg-gray-50">
+
+  <body>
     <div id="root"></div>
+
     <script type="text/babel">
       const { useState, useEffect, useMemo } = React;
       function pad(n){ return String(n).padStart(2,'0'); }
@@ -99,16 +127,18 @@
         };
 
         return (
-          <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
-            <div className="max-w-6xl mx-auto space-y-6 overflow-hidden">
+          <div className="min-h-screen text-gray-900 p-6">
+            <div className="max-w-6xl mx-auto space-y-6">
               <header className="text-center">
                 <h1 className="text-3xl font-bold">Z Extemp Timer</h1>
                 <p className="mt-1 text-sm text-gray-600">Set intervals and a start time to auto-generate the schedule.</p>
               </header>
+
               <div className="text-center text-6xl md:text-8xl font-mono font-bold tracking-widest">
                 {fmtTime(now)}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-white p-4 rounded-2xl shadow">
+
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-white/90 p-4 rounded-2xl shadow">
                 <Labeled label="Draw Interval (min)">
                   <input type="number" min={1} className="w-full border rounded-lg px-2 py-1"
                     value={drawInterval}
@@ -136,12 +166,27 @@
                 </Labeled>
               </div>
 
-              <!-- Watermark background -->
-              <div className="relative bg-white rounded-2xl shadow overflow-hidden">
-                <img src="logo.png" className="absolute inset-0 w-full h-full object-contain opacity-10 pointer-events-none" />
-                <table className="relative w-full text-xl md:text-2xl lg:text-3xl xl:text-4xl table-fixed">
+              <div className="bg-white/90 rounded-2xl shadow overflow-hidden">
+                <table className="w-full text-xl md:text-2xl lg:text-3xl xl:text-4xl table-fixed">
                   <thead className="bg-gray-100 text-gray-700 text-sm md:text-base lg:text-lg">
                     <tr>
                       <Th>Speaker</Th>
                       <Th>Draw</Th>
                       <Th>15 min</Th>
+                      <Th>10 min</Th>
+                      <Th>5 min</Th>
+                      <Th>Release</Th>
+                      <Th>Speak</Th>
+                      <Th>Status</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((r)=> (
+                      <tr key={r.id} className="border-t text-center">
+                        <Td highlight={isWithinCallInterval(r.draw)} active={isActiveOneMinute(r.draw)} red={isRedOneMinute(r.draw)} black={isBlackAfterRed(r.draw)}>{r.speaker}</Td>
+                        <Td highlight={isWithinCallInterval(r.draw)} active={isActiveOneMinute(r.draw)} red={isRedOneMinute(r.draw)} black={isBlackAfterRed(r.draw)}>{fmtTime(r.draw)}</Td>
+                        <Td highlight={isWithinCallInterval(r.m15)} active={isActiveOneMinute(r.m15)} red={isRedOneMinute(r.m15)} black={isBlackAfterRed(r.m15)}>{fmtTime(r.m15)}</Td>
+                        <Td highlight={isWithinCallInterval(r.m10)} active={isActiveOneMinute(r.m10)} red={isRedOneMinute(r.m10)} black={isBlackAfterRed(r.m10)}>{fmtTime(r.m10)}</Td>
+                        <Td highlight={isWithinCallInterval(r.m5)} active={isActiveOneMinute(r.m5)} red={isRedOneMinute(r.m5)} black={isBlackAfterRed(r.m5)}>{fmtTime(r.m5)}</Td>
+                        <Td highlight={isWithinCallInterval(r.release)} active={isActiveOneMinute(r.release)} red={isRedOneMinute(r.release)} black={isBlackAfterRed(r.release)} className="font-medium">{fmtTime(r.release)}</Td>
+                        <Td highlight={isWithinCallInterval(r.speak)} active={isAct
