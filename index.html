@@ -31,14 +31,16 @@
       }
       function ZExtempTimer(){
         const [drawInterval, setDrawInterval] = useState(9);
-        const [releaseInterval, setReleaseInterval] = useState(1);
+        const [releaseInterval, setReleaseInterval] = useState(0); // default now 0
         const [callInterval, setCallInterval] = useState(1);
         const [speakerCount, setSpeakerCount] = useState(6);
         const [roundBeginsAt, setRoundBeginsAt] = useState('');
         const [rows, setRows] = useState([]);
         const [tick, setTick] = useState(0);
+
         useEffect(()=>{ const t=setInterval(()=>setTick(x=>x+1),1000); return ()=>clearInterval(t); },[]);
         const now = useMemo(()=>new Date(), [tick]);
+
         const lastRedOffTime = useMemo(() => {
           const targets = rows.flatMap((r) => [r.draw, r.m15, r.m10, r.m5, r.release, r.speak]).filter(Boolean);
           if (targets.length === 0) return null;
@@ -46,6 +48,7 @@
           for (const t of targets) if (t && t > max) max = t;
           return addMin(max, 2);
         }, [rows]);
+
         useEffect(()=>{
           const start = parseHHMM(roundBeginsAt);
           if(!start) return;
@@ -55,12 +58,21 @@
             const m15 = addMin(draw, 15);
             const m10 = addMin(draw, 20);
             const m5  = addMin(draw, 25);
-            const release = addMin(draw, 30);
+
+            // CHANGED: Speak fixed at Draw + 30; Release derived from Speak - releaseInterval
             const speak = addMin(draw, 30);
-            next.push({ id: `${i}`, speaker: `${i+1}`, draw, m15, m10, m5, release, speak, call: addMin(draw, -callInterval) });
+            const release = addMin(speak, -releaseInterval);
+
+            next.push({
+              id: `${i}`,
+              speaker: `${i+1}`,
+              draw, m15, m10, m5, release, speak,
+              call: addMin(draw, -callInterval)
+            });
           }
           setRows(next);
         }, [drawInterval, releaseInterval, callInterval, speakerCount, roundBeginsAt]);
+
         const statusFor = (r)=>{
           if(!r.draw) return '—';
           const callTime = r.call ?? addMin(r.draw, -callInterval);
@@ -74,6 +86,7 @@
           if(now >= r.speak && now < addMin(r.speak, 7)) return 'Speaking';
           return 'Done';
         };
+
         const isWithinCallInterval = (targetTime) => {
           if(!targetTime) return false;
           const diffMin = Math.abs((targetTime - now) / 60000);
@@ -92,6 +105,7 @@
           if(lastRedOffTime && now >= lastRedOffTime) return false;
           return now >= addMin(targetTime, 2);
         };
+
         return (
           <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
             <div className="max-w-6xl mx-auto space-y-6 overflow-hidden">
@@ -103,11 +117,31 @@
                 {fmtTime(now)}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-white p-4 rounded-2xl shadow">
-                <Labeled label="Draw Interval (min)"><input type="number" min={1} className="w-full border rounded-lg px-2 py-1" value={drawInterval} onChange={(e)=>setDrawInterval(Math.max(1, Number(e.target.value||1)))} /></Labeled>
-                <Labeled label="Release Interval (min)"><input type="number" min={0} className="w-full border rounded-lg px-2 py-1" value={releaseInterval} onChange={(e)=>setReleaseInterval(Math.max(0, Number(e.target.value||0)))} /></Labeled>
-                <Labeled label="Call Interval (min)"><input type="number" min={0} className="w-full border rounded-lg px-2 py-1" value={callInterval} onChange={(e)=>setCallInterval(Math.max(0, Number(e.target.value||0)))} /></Labeled>
-                <Labeled label="Speakers"><input type="number" min={1} className="w-full border rounded-lg px-2 py-1" value={speakerCount} onChange={(e)=>setSpeakerCount(Math.max(1, Number(e.target.value||1)))} /></Labeled>
-                <Labeled label="Round Begins At"><input type="time" className="w-full border rounded-lg px-2 py-1" value={roundBeginsAt} onChange={(e)=>setRoundBeginsAt(e.target.value)} /></Labeled>
+                <Labeled label="Draw Interval (min)">
+                  <input type="number" min={1} className="w-full border rounded-lg px-2 py-1"
+                    value={drawInterval}
+                    onChange={(e)=>setDrawInterval(Math.max(1, Number(e.target.value||1)))} />
+                </Labeled>
+                <Labeled label="Release Interval (min)">
+                  <input type="number" min={0} className="w-full border rounded-lg px-2 py-1"
+                    value={releaseInterval}
+                    onChange={(e)=>setReleaseInterval(Math.max(0, Number(e.target.value||0)))} />
+                </Labeled>
+                <Labeled label="Call Interval (min)">
+                  <input type="number" min={0} className="w-full border rounded-lg px-2 py-1"
+                    value={callInterval}
+                    onChange={(e)=>setCallInterval(Math.max(0, Number(e.target.value||0)))} />
+                </Labeled>
+                <Labeled label="Speakers">
+                  <input type="number" min={1} className="w-full border rounded-lg px-2 py-1"
+                    value={speakerCount}
+                    onChange={(e)=>setSpeakerCount(Math.max(1, Number(e.target.value||1)))} />
+                </Labeled>
+                <Labeled label="Round Begins At">
+                  <input type="time" className="w-full border rounded-lg px-2 py-1"
+                    value={roundBeginsAt}
+                    onChange={(e)=>setRoundBeginsAt(e.target.value)} />
+                </Labeled>
               </div>
               <div className="bg-white rounded-2xl shadow">
                 <table className="w-full text-xl md:text-2xl lg:text-3xl xl:text-4xl table-fixed">
@@ -143,6 +177,7 @@
           </div>
         );
       }
+
       function Labeled({label, children}){
         return (
           <label className="flex flex-col gap-1 text-sm">
@@ -174,6 +209,7 @@
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{text}</span>
         );
       }
+
       const root = ReactDOM.createRoot(document.getElementById('root'));
       root.render(<ZExtempTimer />);
     </script>
