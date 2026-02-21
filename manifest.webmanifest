@@ -1,0 +1,17 @@
+{
+  "name": "Z Extemp Timer",
+  "short_name": "Z Timer",
+  "description": "Offline-capable Z Extemp Timer installable on Android and Windows.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
