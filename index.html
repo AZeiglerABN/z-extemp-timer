@@ -5,229 +5,308 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Z Extemp Timer</title>
     <meta name="theme-color" content="#111827" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+    <link rel="manifest" href="manifest.webmanifest" />
     <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
       html, body {
         height: 100%;
         margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        background: #f9fafb; /* fallback color */
+        background: #f9fafb;
+        color: #111827;
       }
-
-      /* ✅ Full-page background layer */
+      body {
+        position: relative;
+        overflow-x: hidden;
+      }
       .page-bg {
         position: fixed;
         inset: 0;
         background: url("logo.png") no-repeat center center;
-        background-size: contain; /* shows entire logo */
-        opacity: 0.12;            /* adjust visibility */
-        pointer-events: none;     /* allows clicks through */
-        z-index: -1;              /* keeps it behind everything */
+        background-size: contain;
+        opacity: 0.12;
+        pointer-events: none;
+        z-index: -1;
       }
+      .app {
+        min-height: 100vh;
+        padding: 24px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        margin: 0;
+        text-align: center;
+      }
+      .subtitle {
+        margin: 4px 0 0;
+        text-align: center;
+        color: #4b5563;
+        font-size: 0.92rem;
+      }
+      .clock {
+        margin: 20px 0;
+        text-align: center;
+        font-size: clamp(3rem, 14vw, 7rem);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        background: rgba(255,255,255,0.9);
+        padding: 16px;
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      }
+      .control {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .control label {
+        font-size: 0.85rem;
+        color: #4b5563;
+      }
+      .control input {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 1rem;
+        background: #fff;
+      }
+      .table-wrap {
+        margin-top: 20px;
+        overflow-x: auto;
+        background: rgba(255,255,255,0.9);
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+      th, td {
+        padding: 8px;
+        border-top: 1px solid #e5e7eb;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      th {
+        background: #f3f4f6;
+        text-align: left;
+        font-size: 0.95rem;
+      }
+      td {
+        text-align: center;
+        font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+      }
+      .highlight { background: #fef3c7; }
+      .active { background: #bbf7d0; }
+      .red { background: #fecaca; }
+      .black { background: #111827; color: #fff; }
+      .status-pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 600;
+      }
+      .status-prep { background: #fef3c7; color: #92400e; }
+      .status-released { background: #dbeafe; color: #1e40af; }
+      .status-speaking { background: #ede9fe; color: #5b21b6; }
+      .status-done { background: #dcfce7; color: #166534; }
+      .status-default { background: #f3f4f6; color: #374151; }
     </style>
   </head>
-
   <body>
-    <!-- Background layer -->
     <div class="page-bg"></div>
+    <main class="app">
+      <div class="container">
+        <h1>Z Extemp Timer</h1>
+        <p class="subtitle">Offline-capable timer app for Android and Windows via installable PWA.</p>
+        <div class="clock" id="clock">--:--</div>
 
-    <!-- React app root -->
-    <div id="root"></div>
+        <section class="controls">
+          <div class="control"><label for="drawInterval">Draw Interval (min)</label><input id="drawInterval" type="number" min="1" value="9" /></div>
+          <div class="control"><label for="releaseInterval">Release Interval (min)</label><input id="releaseInterval" type="number" min="0" value="0" /></div>
+          <div class="control"><label for="callInterval">Call Interval (min)</label><input id="callInterval" type="number" min="0" value="1" /></div>
+          <div class="control"><label for="speakerCount">Speakers</label><input id="speakerCount" type="number" min="1" value="6" /></div>
+          <div class="control"><label for="roundBeginsAt">Round Begins At</label><input id="roundBeginsAt" type="time" /></div>
+        </section>
 
-    <script type="text/babel">
-      const { useState, useEffect, useMemo } = React;
-      function pad(n){ return String(n).padStart(2,'0'); }
-      function fmtTime(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
-      function addMin(d, m){ return new Date(d.getTime() + m*60000); }
-      function parseHHMM(s){
-        if(!s) return null;
-        const [h,m] = s.split(':').map(Number);
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Speaker</th>
+                <th>Draw</th>
+                <th>15 min</th>
+                <th>10 min</th>
+                <th>5 min</th>
+                <th>Release</th>
+                <th>Speak</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleBody"></tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+      function addMin(d, m) { return new Date(d.getTime() + m * 60000); }
+      function parseHHMM(s) {
+        if (!s) return null;
+        const [h, m] = s.split(':').map(Number);
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
       }
 
-      function ZExtempTimer(){
-        const [drawInterval, setDrawInterval] = useState(9);
-        const [releaseInterval, setReleaseInterval] = useState(0); // default 0
-        const [callInterval, setCallInterval] = useState(1);
-        const [speakerCount, setSpeakerCount] = useState(6);
-        const [roundBeginsAt, setRoundBeginsAt] = useState('');
-        const [rows, setRows] = useState([]);
-        const [tick, setTick] = useState(0);
+      const state = {
+        drawInterval: 9,
+        releaseInterval: 0,
+        callInterval: 1,
+        speakerCount: 6,
+        roundBeginsAt: '',
+        rows: []
+      };
 
-        useEffect(()=>{ const t=setInterval(()=>setTick(x=>x+1),1000); return ()=>clearInterval(t); },[]);
-        const now = useMemo(()=>new Date(), [tick]);
+      const els = {
+        clock: document.getElementById('clock'),
+        drawInterval: document.getElementById('drawInterval'),
+        releaseInterval: document.getElementById('releaseInterval'),
+        callInterval: document.getElementById('callInterval'),
+        speakerCount: document.getElementById('speakerCount'),
+        roundBeginsAt: document.getElementById('roundBeginsAt'),
+        scheduleBody: document.getElementById('scheduleBody')
+      };
 
-        const lastRedOffTime = useMemo(() => {
-          const targets = rows.flatMap((r) => [r.draw, r.m15, r.m10, r.m5, r.release, r.speak]).filter(Boolean);
-          if (targets.length === 0) return null;
-          let max = targets[0];
-          for (const t of targets) if (t && t > max) max = t;
-          return addMin(max, 2);
-        }, [rows]);
-
-        useEffect(()=>{
-          const start = parseHHMM(roundBeginsAt);
-          if(!start) return;
-          const next = [];
-          for(let i=0;i<speakerCount;i++){
-            const draw = addMin(start, i*drawInterval);
-            const m15 = addMin(draw, 15);
-            const m10 = addMin(draw, 20);
-            const m5  = addMin(draw, 25);
-            const speak = addMin(draw, 30);
-            const release = addMin(speak, -releaseInterval);
-            next.push({
-              id: `${i}`,
-              speaker: `${i+1}`,
-              draw, m15, m10, m5, release, speak,
-              call: addMin(draw, -callInterval)
-            });
-          }
-          setRows(next);
-        }, [drawInterval, releaseInterval, callInterval, speakerCount, roundBeginsAt]);
-
-        const statusFor = (r)=>{
-          if(!r.draw) return '—';
-          const callTime = r.call ?? addMin(r.draw, -callInterval);
-          if(now < callTime) return 'Waiting to draw';
-          if(now >= callTime && now < r.draw) return 'Call to table';
-          if(now < r.release){
-            const minsLeft = Math.ceil((r.release - now)/60000);
-            return `Prep: ${minsLeft}m left`;
-          }
-          if(now < r.speak) return 'Released';
-          if(now >= r.speak && now < addMin(r.speak, 7)) return 'Speaking';
-          return 'Done';
-        };
-
-        const isWithinCallInterval = (targetTime) => {
-          if(!targetTime) return false;
-          const diffMin = Math.abs((targetTime - now) / 60000);
-          return diffMin <= callInterval;
-        };
-        const isActiveOneMinute = (targetTime) => now >= targetTime && now < addMin(targetTime, 1);
-        const isRedOneMinute = (targetTime) => now >= addMin(targetTime, 1) && now < addMin(targetTime, 2);
-        const isBlackAfterRed = (targetTime) => {
-          if(!targetTime) return false;
-          if(lastRedOffTime && now >= lastRedOffTime) return false;
-          return now >= addMin(targetTime, 2);
-        };
-
-        return (
-          <div className="min-h-screen text-gray-900 p-6">
-            <div className="max-w-6xl mx-auto space-y-6">
-              <header className="text-center">
-                <h1 className="text-3xl font-bold">Z Extemp Timer</h1>
-                <p className="mt-1 text-sm text-gray-600">Set intervals and a start time to auto-generate the schedule.</p>
-              </header>
-
-              <div className="text-center text-6xl md:text-8xl font-mono font-bold tracking-widest">
-                {fmtTime(now)}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-white/90 p-4 rounded-2xl shadow">
-                <Labeled label="Draw Interval (min)">
-                  <input type="number" min={1} className="w-full border rounded-lg px-2 py-1"
-                    value={drawInterval}
-                    onChange={(e)=>setDrawInterval(Math.max(1, Number(e.target.value||1)))} />
-                </Labeled>
-                <Labeled label="Release Interval (min)">
-                  <input type="number" min={0} className="w-full border rounded-lg px-2 py-1"
-                    value={releaseInterval}
-                    onChange={(e)=>setReleaseInterval(Math.max(0, Number(e.target.value||0)))} />
-                </Labeled>
-                <Labeled label="Call Interval (min)">
-                  <input type="number" min={0} className="w-full border rounded-lg px-2 py-1"
-                    value={callInterval}
-                    onChange={(e)=>setCallInterval(Math.max(0, Number(e.target.value||0)))} />
-                </Labeled>
-                <Labeled label="Speakers">
-                  <input type="number" min={1} className="w-full border rounded-lg px-2 py-1"
-                    value={speakerCount}
-                    onChange={(e)=>setSpeakerCount(Math.max(1, Number(e.target.value||1)))} />
-                </Labeled>
-                <Labeled label="Round Begins At">
-                  <input type="time" className="w-full border rounded-lg px-2 py-1"
-                    value={roundBeginsAt}
-                    onChange={(e)=>setRoundBeginsAt(e.target.value)} />
-                </Labeled>
-              </div>
-
-              <div className="bg-white/90 rounded-2xl shadow overflow-hidden">
-                <table className="w-full text-xl md:text-2xl lg:text-3xl xl:text-4xl table-fixed">
-                  <thead className="bg-gray-100 text-gray-700 text-sm md:text-base lg:text-lg">
-                    <tr>
-                      <Th>Speaker</Th>
-                      <Th>Draw</Th>
-                      <Th>15 min</Th>
-                      <Th>10 min</Th>
-                      <Th>5 min</Th>
-                      <Th>Release</Th>
-                      <Th>Speak</Th>
-                      <Th>Status</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r)=> (
-                      <tr key={r.id} className="border-t text-center">
-                        <Td highlight={isWithinCallInterval(r.draw)} active={isActiveOneMinute(r.draw)} red={isRedOneMinute(r.draw)} black={isBlackAfterRed(r.draw)}>{r.speaker}</Td>
-                        <Td highlight={isWithinCallInterval(r.draw)} active={isActiveOneMinute(r.draw)} red={isRedOneMinute(r.draw)} black={isBlackAfterRed(r.draw)}>{fmtTime(r.draw)}</Td>
-                        <Td highlight={isWithinCallInterval(r.m15)} active={isActiveOneMinute(r.m15)} red={isRedOneMinute(r.m15)} black={isBlackAfterRed(r.m15)}>{fmtTime(r.m15)}</Td>
-                        <Td highlight={isWithinCallInterval(r.m10)} active={isActiveOneMinute(r.m10)} red={isRedOneMinute(r.m10)} black={isBlackAfterRed(r.m10)}>{fmtTime(r.m10)}</Td>
-                        <Td highlight={isWithinCallInterval(r.m5)} active={isActiveOneMinute(r.m5)} red={isRedOneMinute(r.m5)} black={isBlackAfterRed(r.m5)}>{fmtTime(r.m5)}</Td>
-                        <Td highlight={isWithinCallInterval(r.release)} active={isActiveOneMinute(r.release)} red={isRedOneMinute(r.release)} black={isBlackAfterRed(r.release)} className="font-medium">{fmtTime(r.release)}</Td>
-                        <Td highlight={isWithinCallInterval(r.speak)} active={isActiveOneMinute(r.speak)} red={isRedOneMinute(r.speak)} black={isBlackAfterRed(r.speak)}>{fmtTime(r.speak)}</Td>
-                        <Td><StatusPill text={statusFor(r)} /></Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
+      function recalcRows() {
+        const start = parseHHMM(state.roundBeginsAt);
+        if (!start) {
+          state.rows = [];
+          renderTable();
+          return;
+        }
+        const next = [];
+        for (let i = 0; i < state.speakerCount; i++) {
+          const draw = addMin(start, i * state.drawInterval);
+          const m15 = addMin(draw, 15);
+          const m10 = addMin(draw, 20);
+          const m5 = addMin(draw, 25);
+          const speak = addMin(draw, 30);
+          const release = addMin(speak, -state.releaseInterval);
+          next.push({
+            id: `${i}`,
+            speaker: `${i + 1}`,
+            draw, m15, m10, m5, release, speak,
+            call: addMin(draw, -state.callInterval)
+          });
+        }
+        state.rows = next;
+        renderTable();
       }
 
-      function Labeled({label, children}){
-        return (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-600">{label}</span>
-            {children}
-          </label>
-        );
-      }
-      function Th({ children }) {
-        return <th className="text-left font-semibold tracking-wide px-2 py-1 whitespace-nowrap">{children}</th>;
-      }
-      function Td({ children, highlight, active, red, black }) {
-        let bg = '';
-        if (active) bg = 'bg-green-200';
-        else if (red) bg = 'bg-red-200';
-        else if (black) bg = 'bg-black text-white';
-        else if (highlight) bg = 'bg-yellow-200';
-        return <td className={`px-2 py-1 align-middle whitespace-nowrap overflow-hidden text-ellipsis ${bg}`}>{children}</td>;
-      }
-      function StatusPill({ text }) {
-        const color =
-          text.startsWith('Prep') ? 'bg-yellow-100 text-yellow-800' :
-          text === 'Released' ? 'bg-blue-100 text-blue-800' :
-          text === 'Speaking' ? 'bg-purple-100 text-purple-800' :
-          text === 'Done' ? 'bg-green-100 text-green-800' :
-          text === 'Waiting to draw' ? 'bg-gray-100 text-gray-700' :
-          'bg-gray-100 text-gray-700';
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{text}</span>
-        );
+      function statusFor(row, now) {
+        const callTime = row.call || addMin(row.draw, -state.callInterval);
+        if (now < callTime) return 'Waiting to draw';
+        if (now >= callTime && now < row.draw) return 'Call to table';
+        if (now < row.release) {
+          const minsLeft = Math.ceil((row.release - now) / 60000);
+          return `Prep: ${minsLeft}m left`;
+        }
+        if (now < row.speak) return 'Released';
+        if (now < addMin(row.speak, 7)) return 'Speaking';
+        return 'Done';
       }
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<ZExtempTimer />);
+      function lastRedOffTime(rows) {
+        const targets = rows.flatMap((r) => [r.draw, r.m15, r.m10, r.m5, r.release, r.speak]).filter(Boolean);
+        if (!targets.length) return null;
+        return addMin(targets.reduce((a, b) => (b > a ? b : a), targets[0]), 2);
+      }
+
+      function withCellClass(target, now, globalCutoff) {
+        const diffMin = Math.abs((target - now) / 60000);
+        const highlight = diffMin <= state.callInterval;
+        const active = now >= target && now < addMin(target, 1);
+        const red = now >= addMin(target, 1) && now < addMin(target, 2);
+        const black = now >= addMin(target, 2) && (!globalCutoff || now < globalCutoff);
+        if (active) return 'active';
+        if (red) return 'red';
+        if (black) return 'black';
+        if (highlight) return 'highlight';
+        return '';
+      }
+
+      function pillClass(status) {
+        if (status.startsWith('Prep')) return 'status-prep';
+        if (status === 'Released') return 'status-released';
+        if (status === 'Speaking') return 'status-speaking';
+        if (status === 'Done') return 'status-done';
+        return 'status-default';
+      }
+
+      function renderTable() {
+        const now = new Date();
+        const cutoff = lastRedOffTime(state.rows);
+        const rowsHtml = state.rows.map((row) => {
+          const status = statusFor(row, now);
+          return `
+            <tr>
+              <td class="${withCellClass(row.draw, now, cutoff)}">${row.speaker}</td>
+              <td class="${withCellClass(row.draw, now, cutoff)}">${fmtTime(row.draw)}</td>
+              <td class="${withCellClass(row.m15, now, cutoff)}">${fmtTime(row.m15)}</td>
+              <td class="${withCellClass(row.m10, now, cutoff)}">${fmtTime(row.m10)}</td>
+              <td class="${withCellClass(row.m5, now, cutoff)}">${fmtTime(row.m5)}</td>
+              <td class="${withCellClass(row.release, now, cutoff)}">${fmtTime(row.release)}</td>
+              <td class="${withCellClass(row.speak, now, cutoff)}">${fmtTime(row.speak)}</td>
+              <td><span class="status-pill ${pillClass(status)}">${status}</span></td>
+            </tr>
+          `;
+        }).join('');
+        els.scheduleBody.innerHTML = rowsHtml;
+      }
+
+      function syncInputs() {
+        state.drawInterval = Math.max(1, Number(els.drawInterval.value || 1));
+        state.releaseInterval = Math.max(0, Number(els.releaseInterval.value || 0));
+        state.callInterval = Math.max(0, Number(els.callInterval.value || 0));
+        state.speakerCount = Math.max(1, Number(els.speakerCount.value || 1));
+        state.roundBeginsAt = els.roundBeginsAt.value;
+        recalcRows();
+      }
+
+      [els.drawInterval, els.releaseInterval, els.callInterval, els.speakerCount, els.roundBeginsAt]
+        .forEach((el) => el.addEventListener('input', syncInputs));
+
+      function tickClock() {
+        const now = new Date();
+        els.clock.textContent = fmtTime(now);
+        renderTable();
+      }
+
+      setInterval(tickClock, 1000);
+      syncInputs();
+      tickClock();
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+      }
     </script>
   </body>
 </html>
