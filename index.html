@@ -168,6 +168,7 @@
     <script>
       function pad(n) { return String(n).padStart(2, '0'); }
       function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+      function fmtClock(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
       function addMin(d, m) { return new Date(d.getTime() + m * 60000); }
       function parseHHMM(s) {
         if (!s) return null;
@@ -296,10 +297,9 @@
 
       function tickClock() {
         const now = new Date();
-        els.clock.textContent = fmtTime(now);
+        els.clock.textContent = fmtClock(now);
         renderTable();
       }
-
       setInterval(tickClock, 1000);
       syncInputs();
       tickClock();
