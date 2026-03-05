@@ -1,6 +1,11 @@
 # Z Extemp Timer (Offline App)
 
-This build is a visual/functional copy of the timer and now works as an installable Progressive Web App (PWA), which can be installed on both Android (Chrome) and Windows (Edge/Chrome) and used offline.
+This build is a visual/functional copy of the timer and works as an installable Progressive Web App (PWA), which can be installed on both Android (Chrome) and Windows (Edge/Chrome) and used offline.
+
+## What changed
+
+- The live clock now shows **hours, minutes, and seconds**.
+- The service worker cache version was bumped so installed apps can receive this update.
 
 ## Run locally
 
@@ -25,3 +30,9 @@ Then open <http://localhost:4173>.
 ## Offline support
 
 A service worker caches core app files (`index.html`, `logo.png`, and `manifest.webmanifest`) so the app can continue running without internet after first load.
+
+## If an installed app does not update immediately
+
+1. Open the app while connected to internet.
+2. Close it, then reopen it.
+3. If still stale, refresh the page in browser once and reinstall/open again.
