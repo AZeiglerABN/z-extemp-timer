@@ -1,4 +1,4 @@
-const CACHE_NAME = 'z-extemp-timer-v1';
+const CACHE_NAME = 'z-extemp-timer-v2';
 const ASSETS = ['./', './index.html', './logo.png', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
