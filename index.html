@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Z Extemp Timer</title>
     <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Z Timer" />
+    <link rel="apple-touch-icon" href="logo.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
       :root {
@@ -67,6 +71,21 @@
         border-radius: 18px;
         box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
       }
+      .install-help {
+        margin-top: 12px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        color: #374151;
+      }
+      .install-help strong { color: #111827; }
+      .install-help ol {
+        margin: 8px 0 0 20px;
+        padding: 0;
+      }
+      .install-help li { margin: 2px 0; }
       .control {
         display: flex;
         flex-direction: column;
@@ -143,6 +162,15 @@
           <div class="control"><label for="callInterval">Call Interval (min)</label><input id="callInterval" type="number" min="0" value="1" /></div>
           <div class="control"><label for="speakerCount">Speakers</label><input id="speakerCount" type="number" min="1" value="6" /></div>
           <div class="control"><label for="roundBeginsAt">Round Begins At</label><input id="roundBeginsAt" type="time" /></div>
+        </section>
+
+        <section class="install-help" aria-label="Install help">
+          <strong>Install on iPhone/iPad:</strong> Open this page in Safari, tap <em>Share</em>, then choose <em>Add to Home Screen</em>.
+          <ol>
+            <li>Open app URL in Safari.</li>
+            <li>Tap Share.</li>
+            <li>Tap Add to Home Screen, then Add.</li>
+          </ol>
         </section>
 
         <section class="table-wrap">
