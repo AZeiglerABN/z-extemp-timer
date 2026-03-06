@@ -27,6 +27,13 @@ Then open <http://localhost:4173>.
 2. Choose **Install app** from the address bar/menu.
 3. Launch it like a native app from Start Menu.
 
+## Install on iPhone/iPad
+
+1. Open the app URL in **Safari**.
+2. Tap **Share**.
+3. Tap **Add to Home Screen**.
+4. Tap **Add**.
+
 ## Offline support
 
 A service worker caches core app files (`index.html`, `logo.png`, and `manifest.webmanifest`) so the app can continue running without internet after first load.
