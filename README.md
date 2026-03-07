@@ -6,6 +6,7 @@ This build is a visual/functional copy of the timer and works as an installable 
 
 - The live clock now shows **hours, minutes, and seconds**.
 - The service worker cache version was bumped so installed apps can receive this update.
+- Added an in-app **Install App** button for browsers that support install prompts.
 
 ## Run locally
 
@@ -43,3 +44,15 @@ A service worker caches core app files (`index.html`, `logo.png`, and `manifest.
 1. Open the app while connected to internet.
 2. Close it, then reopen it.
 3. If still stale, refresh the page in browser once and reinstall/open again.
+
+## If you must press Ctrl+F5 to see updates
+
+1. Open the app URL once while online and wait a few seconds.
+2. Close all tabs/windows for the app and reopen it.
+3. If still stale, uninstall/reinstall the installed app shortcut once.
+
+## If you do not see an install option
+
+- **Windows (Edge/Chrome):** look for **Install App** in the address bar or app menu.
+- **Android (Chrome):** menu → **Add to Home screen**.
+- **iPhone/iPad (Safari):** Share → **Add to Home Screen** (Apple does not use the same install prompt button).
