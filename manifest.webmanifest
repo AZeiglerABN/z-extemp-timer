@@ -1,9 +1,3 @@
-
----
-
-## `manifest.webmanifest`
-
-```json
 {
   "name": "Z Extemp Timer",
   "short_name": "Z Timer",
